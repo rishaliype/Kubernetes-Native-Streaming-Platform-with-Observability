@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-jmx-config
+  namespace: citystream
+data:
+  jmx-config.yaml: |
+    lowercaseOutputName: true
+    lowercaseOutputLabelNames: true
+    whitelistObjectNames:
+      - "metrics:name=*.driver.*"
+      - "metrics:name=*.executor.*"
+      - "metrics:name=*.DAGScheduler.*"
+      - "metrics:name=*.BlockManager.*"
+      - "java.lang:type=Memory"
+      - "java.lang:type=GarbageCollector,*"
+      - "java.lang:type=Threading"
+      - "java.lang:type=Runtime"
+      - "java.lang:type=OperatingSystem"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-master
+  namespace: citystream
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark-master
+  template:
+    metadata:
+      labels:
+        app: spark-master
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8090"
+        prometheus.io/path: "/metrics"
+    spec:
+      enableServiceLinks: false
+      containers:
+      - name: spark-master
+        image: spark-jmx:3.4.1
+        imagePullPolicy: Never
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            export SPARK_MASTER_OPTS="-javaagent:/opt/jmx_prometheus_javaagent.jar=8090:/opt/jmx-config.yaml"
+            /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master \
+              --host 0.0.0.0 \
+              --port 7077 \
+              --webui-port 8080
+        volumeMounts:
+        - name: spark-output
+          mountPath: /opt/spark-output
+        - name: jmx-config
+          mountPath: /opt/jmx-config.yaml
+          subPath: jmx-config.yaml
+        ports:
+        - containerPort: 7077
+          name: spark
+        - containerPort: 8080
+          name: ui
+        - containerPort: 8090
+          name: metrics
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: spark-output
+        persistentVolumeClaim:
+          claimName: spark-output-pvc
+      - name: jmx-config
+        configMap:
+          name: spark-jmx-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-master
+  namespace: citystream
+spec:
+  type: ClusterIP
+  ports:
+  - port: 7077
+    targetPort: 7077
+    name: spark
+  - port: 8080
+    targetPort: 8080
+    name: web-ui
+  - port: 8090
+    targetPort: 8090
+    name: metrics
+  selector:
+    app: spark-master
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-master-ui
+  namespace: citystream
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30080
+  selector:
+    app: spark-master
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-worker
+  namespace: citystream
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark-worker
+  template:
+    metadata:
+      labels:
+        app: spark-worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8091"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: spark-worker
+        image: spark-jmx:3.4.1
+        imagePullPolicy: Never
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            export SPARK_WORKER_OPTS="-javaagent:/opt/jmx_prometheus_javaagent.jar=8091:/opt/jmx-config.yaml"
+            /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+        volumeMounts:
+        - name: jmx-config
+          mountPath: /opt/jmx-config.yaml
+          subPath: jmx-config.yaml
+        ports:
+        - containerPort: 8081
+          name: ui
+        - containerPort: 8091
+          name: metrics
+        env:
+        - name: SPARK_WORKER_MEMORY
+          value: "512M"
+        - name: SPARK_WORKER_CORES
+          value: "1"
+        resources:
+          limits:
+            memory: "768Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+      volumes:
+      - name: jmx-config
+        configMap:
+          name: spark-jmx-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: spark-output-pvc
+  namespace: citystream
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

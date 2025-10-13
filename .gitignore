@@ -1,0 +1,25 @@
+# Logs
+producer-logs/
+consumer-logs/
+
+# Maven build outputs
+producer/target/
+consumer/target/
+
+# MacOS files
+*.DS_Store
+
+# Learning materials (personal notes)
+Analytics.md
+CityStream Pipeline Architecture.md
+DEPLOY_SPARK_CONSUMER_TO_K8.md
+DOCKER_COMPOSE_TAKEAWAYS.md
+DOCKER_TAKEAWAYS.md
+GRAFANA_PROMETHEUS_SETUP.md
+KAFKA_KUBERNETES_CONSUMER.md
+KAFKA_KUBERNETES_PRODUCER.md
+KAFKA_ZOOKEEPER_BASICS.md
+KUBERNETES_TAKEAWAYS.md
+Prometheus_Monitoring_In_Kubernetes.md
+spark-output-analysis/
+

@@ -1,0 +1,9 @@
+FROM wurstmeister/kafka:2.13-2.8.1
+
+USER root
+
+# Download JMX Prometheus exporter
+RUN curl -L https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar \
+    -o /opt/jmx_prometheus_javaagent.jar
+
+# Don't switch user - wurstmeister image runs as root by default

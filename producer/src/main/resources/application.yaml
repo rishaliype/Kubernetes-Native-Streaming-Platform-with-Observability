@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: citystream-producer
+
+kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9093}
+  topic:
+    city-events: city-events
+
+server:
+  port: 8081
+
+logging:
+  level:
+    com.citystream.producer: INFO
+    org.apache.kafka: WARN
+    org.springframework.kafka: DEBUG
+  
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true

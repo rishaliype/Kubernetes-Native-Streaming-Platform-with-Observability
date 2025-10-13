@@ -1,0 +1,36 @@
+# Grafana configuration
+persistence:
+  enabled: false  # Simplified for Minikube
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Admin credentials
+adminUser: admin
+adminPassword: admin123  # Change in production!
+
+# Data sources - auto-configure Prometheus
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server.monitoring.svc.cluster.local
+      access: proxy
+      isDefault: true
+      editable: true
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Disable some optional components
+testFramework:
+  enabled: false
