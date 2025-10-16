@@ -340,7 +340,7 @@ The Grafana dashboard shows:
 *Verification that all application pods are successfully registered and actively scraped by Prometheus, showing Kafka, Producer, and Spark Master/Worker endpoints all in UP state with their respective metrics endpoints.*
 
 ### Producer Event Generation
-![Event Generation and Kafka Sending](images/03-producer-event-generation.png)
+![Event Generation and Kafka Sending](images/03-producer-event-logs.png)
 *Spring Boot producer in action, generating real-time city events with diverse event types (traffic, weather, incident, construction) and severity levels, successfully sending to Kafka with latency tracking (9ms-25ms range).*
 
 ### Windowed Aggregations Output
@@ -348,11 +348,11 @@ The Grafana dashboard shows:
 *Spark Structured Streaming processing results displaying 5-minute windowed aggregations with event counts, city information, event types, and severity distributions organized by time windows.*
 
 ### City Summary Analytics
-![City Summary Analysis](images/05-city-summary-analytics.png)
+![City Summary Analysis](images/06-city-summary-analytics.png)
 *Post-processing batch analytics showing events grouped by city and event type, demonstrating the ability to run complex queries on the streamed data for business intelligence and operational insights.*
 
 ### Kubernetes Deployment Verification
-![kubectl Pod Status](images/06-kubectl-deployment-status.png)
+![kubectl Pod Status](images/05-kubectl-deployment-status.png)
 *Confirmation that all Kubernetes pods (Kafka, Spark Master/Worker, ZooKeeper) are running and stable with correct restart counts and uptime, verifying successful deployment and cluster health.*
 
 ---
